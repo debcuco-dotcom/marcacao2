@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Debs Marcações</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&family=Gloock&display=swap">
+<style>
+/* Layout: one column on the phone; on wide screens the form on the left and a sticky summary on the right. Agenda = day strip + list of bookings. Tokens from the Debs design system. */
+:root{
+  --surface-100:#faf6f2;--surface-200:#ffffff;--surface-300:#f2ebe4;
+  --line:#e3d8cd;--line-strong:#8f7e6f;
+  --ink:#2a1d14;--ink-muted:#6a5646;
+  --cacau:#6b4226;--cacau-deep:#3f2716;--cacau-tint:#f1e6dc;--ink-on-brand:#ffffff;
+  --caramelo:#a35a1c;--caramelo-tint:#f8e8d6;
+  --success:#2c7a4b;--warning:#8a6100;--danger:#b3261e;
+  --font-display:"Gloock","Iowan Old Style",Georgia,serif;
+  --font-sans:"Albert Sans","Segoe UI",system-ui,sans-serif;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;
+  --radius-sm:6px;--radius-md:12px;--radius-lg:20px;--radius-pill:999px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --surface-100:#1a1410;--surface-200:#241c16;--surface-300:#2f251d;
+  --line:#3e3228;--line-strong:#85725f;
+  --ink:#f4ece4;--ink-muted:#c0ad9b;
+  --cacau:#d2a27a;--cacau-deep:#f0dcc8;--cacau-tint:#3a2a1e;--ink-on-brand:#1e140d;
+  --caramelo:#e7a565;--caramelo-tint:#3b2716;
+  --success:#74c995;--warning:#e6b552;--danger:#f2877f;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --surface-100:#1a1410;--surface-200:#241c16;--surface-300:#2f251d;
+  --line:#3e3228;--line-strong:#85725f;
+  --ink:#f4ece4;--ink-muted:#c0ad9b;
+  --cacau:#d2a27a;--cacau-deep:#f0dcc8;--cacau-tint:#3a2a1e;--ink-on-brand:#1e140d;
+  --caramelo:#e7a565;--caramelo-tint:#3b2716;
+  --success:#74c995;--warning:#e6b552;--danger:#f2877f;color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--surface-100);color:var(--ink);font-family:var(--font-sans);font-size:16px;line-height:24px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:var(--space-6) 64px}
+h1,h2,h3{font-family:var(--font-display);font-weight:400;margin:0;text-wrap:balance}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--ink-muted)}
+.small{font-size:14px;line-height:20px}
+.label{font-size:12px;line-height:16px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-muted)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cacau);outline-offset:2px}
+
+/* Header */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;padding-bottom:var(--space-6);border-bottom:1px solid var(--line);margin-bottom:var(--space-8)}
+.brand{display:flex;align-items:center;gap:var(--space-4)}
+.mark{flex:none;width:64px;height:64px;border-radius:var(--radius-md);background:var(--cacau-tint);display:grid;place-items:center}
+.mark svg{width:44px;height:44px}
+.sc-blade{fill:var(--cacau)} .sc-ring{fill:none;stroke:var(--cacau);stroke-width:4;stroke-linecap:round} .sc-pin{fill:var(--caramelo)}
+.done .mark{width:56px;height:56px}
+.brand h1{font-size:48px;line-height:52px;letter-spacing:-.5px;color:var(--cacau-deep)}
+.tabs{display:flex;gap:var(--space-1);background:var(--surface-300);padding:var(--space-1);border-radius:var(--radius-pill)}
+.tabs a{text-decoration:none;color:var(--ink-muted);font-weight:600;padding:var(--space-2) var(--space-4);border-radius:var(--radius-pill)}
+.tabs a[aria-current="page"]{background:var(--surface-200);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+
+.notice{background:var(--caramelo-tint);color:var(--ink);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);margin-bottom:var(--space-6)}
+
+/* Booking layout */
+.book{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-8)}
+@media (min-width:880px){.book{grid-template-columns:minmax(0,1fr) 340px;align-items:start}.summary{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}}
+.step{display:grid;gap:var(--space-3);padding-bottom:var(--space-8);border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.form{display:grid;gap:var(--space-8)}
+.step-head{display:flex;align-items:baseline;gap:var(--space-3)}
+.step-head .n{font-family:var(--font-display);font-size:22px;color:var(--cacau);min-width:1.2em}
+.step-head h2{font-size:22px;line-height:28px}
+
+.opts{display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.opt{display:grid;gap:var(--space-1);text-align:left;background:var(--surface-200);border:1px solid var(--line);border-radius:var(--radius-md);padding:var(--space-4);cursor:pointer;min-width:0}
+.opt:hover{border-color:var(--line-strong)}
+.opt[aria-pressed="true"],.opt[aria-checked="true"]{background:var(--cacau-tint);border-color:var(--cacau);box-shadow:inset 0 0 0 1px var(--cacau)}
+.opt .t{font-weight:600;display:flex;justify-content:space-between;gap:var(--space-2)}
+.opt .price{font-variant-numeric:tabular-nums;color:var(--cacau-deep);white-space:nowrap}
+.opt .tick{width:20px;height:20px;border-radius:var(--radius-sm);border:1.5px solid var(--line-strong);display:inline-grid;place-items:center;flex:none}
+.opt[aria-pressed="true"] .tick{background:var(--cacau);border-color:var(--cacau)}
+.opt[aria-pressed="true"] .tick::after{content:"";width:10px;height:6px;border-left:2px solid var(--ink-on-brand);border-bottom:2px solid var(--ink-on-brand);transform:translateY(-1px) rotate(-45deg)}
+.opt .row{display:flex;gap:var(--space-3);align-items:flex-start}
+
+.days{display:flex;gap:var(--space-2);overflow-x:auto;padding-bottom:var(--space-2);scrollbar-width:thin}
+.day{flex:none;display:grid;justify-items:center;gap:2px;width:64px;padding:var(--space-2) 0;border-radius:var(--radius-md);border:1px solid var(--line);background:var(--surface-200);cursor:pointer}
+.day .wd{font-size:12px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-muted)}
+.day .dn{font-family:var(--font-display);font-size:22px;line-height:28px}
+.day .mo{font-size:12px;color:var(--ink-muted)}
+.day[aria-pressed="true"]{background:var(--cacau);border-color:var(--cacau);color:var(--ink-on-brand)}
+.day[aria-pressed="true"] .wd,.day[aria-pressed="true"] .mo{color:var(--ink-on-brand)}
+.day:disabled{opacity:.45;cursor:not-allowed;background:transparent}
+
+.slots{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.slot{font-variant-numeric:tabular-nums;padding:var(--space-2) var(--space-4);border-radius:var(--radius-pill);border:1px solid var(--line-strong);background:var(--surface-200);cursor:pointer;font-weight:500}
+.slot[aria-pressed="true"]{background:var(--cacau);border-color:var(--cacau);color:var(--ink-on-brand)}
+.empty{padding:var(--space-4);border:1px dashed var(--line-strong);border-radius:var(--radius-md);color:var(--ink-muted)}
+
+.fields{display:grid;gap:var(--space-4);grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.field{display:grid;gap:var(--space-1);min-width:0}
+.field.full{grid-column:1/-1}
+.field label{font-weight:600;font-size:14px}
+.field input,.field textarea,.field select{width:100%;background:var(--surface-200);border:1px solid var(--line-strong);border-radius:var(--radius-md);padding:var(--space-3);min-height:48px}
+.field textarea{min-height:80px;resize:vertical}
+.field .err{color:var(--danger);font-size:14px;line-height:20px}
+.homebox{background:var(--caramelo-tint);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)}
+
+.paybox{background:var(--surface-300);border-radius:var(--radius-md);padding:var(--space-4);display:grid;gap:var(--space-3)}
+.copyrow{display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap}
+.copyrow code{font-family:var(--font-sans);font-weight:700;font-size:18px;font-variant-numeric:tabular-nums;user-select:all}
+
+/* Summary */
+.summary{background:var(--surface-200);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--space-6);display:grid;gap:var(--space-4)}
+.summary h2{font-size:22px;line-height:28px}
+.sum-list{display:grid;gap:var(--space-2);margin:0;padding:0;list-style:none}
+.sum-list li{display:flex;justify-content:space-between;gap:var(--space-3)}
+.sum-list li span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:var(--space-3)}
+.total strong{font-family:var(--font-display);font-weight:400;font-size:32px;line-height:38px;color:var(--caramelo);font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:48px;padding:var(--space-3) var(--space-6);border-radius:var(--radius-md);border:1px solid transparent;font-weight:600;cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--cacau);color:var(--ink-on-brand)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border-color:var(--line-strong);color:var(--ink)}
+.btn.sm{min-height:36px;padding:var(--space-1) var(--space-3);font-size:14px}
+.btn.danger{background:transparent;border-color:var(--danger);color:var(--danger)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.wide{width:100%}
+.formerr{color:var(--danger);font-size:14px;line-height:20px}
+
+.done{max-width:620px;display:grid;gap:var(--space-4);background:var(--surface-200);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--space-8) var(--space-6)}
+.done h2{font-size:32px;line-height:38px}
+.actions{display:flex;gap:var(--space-3);flex-wrap:wrap}
+
+/* Agenda */
+.ag-head{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-4)}
+.ag-head h2{font-size:32px;line-height:38px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--space-3);margin:var(--space-4) 0 var(--space-6)}
+.stat{background:var(--surface-200);border:1px solid var(--line);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)}
+.stat b{display:block;font-family:var(--font-display);font-weight:400;font-size:28px;line-height:34px;font-variant-numeric:tabular-nums}
+.weeknav{display:flex;gap:var(--space-2);align-items:center}
+.list{display:grid;gap:var(--space-3)}
+.bk{display:grid;grid-template-columns:88px minmax(0,1fr);gap:var(--space-4);background:var(--surface-200);border:1px solid var(--line);border-radius:var(--radius-md);padding:var(--space-4)}
+.bk.cancel{opacity:.6}
+.bk .time{font-variant-numeric:tabular-nums}
+.bk .time b{display:block;font-family:var(--font-display);font-weight:400;font-size:24px;line-height:30px}
+.bk .main{display:grid;gap:var(--space-2);min-width:0}
+.bk .who{display:flex;justify-content:space-between;gap:var(--space-2);flex-wrap:wrap;align-items:center}
+.bk .who strong{font-size:17px}
+.meta{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-4)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;line-height:16px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;padding:4px 8px;border-radius:var(--radius-sm);background:var(--surface-300)}
+.chip::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.chip.pendente{color:var(--warning)} .chip.confirmada,.chip.pago{color:var(--success)} .chip.concluida{color:var(--cacau)} .chip.cancelada{color:var(--danger)}
+.chip.home{color:var(--caramelo)}
+.tag{font-size:14px;color:var(--ink-muted)}
+.tag b{color:var(--ink);font-weight:600}
+.bk .acts{display:flex;flex-wrap:wrap;gap:var(--space-2);padding-top:var(--space-2);border-top:1px solid var(--line)}
+@media (max-width:520px){.bk{grid-template-columns:minmax(0,1fr)}.bk .time{display:flex;gap:var(--space-2);align-items:baseline}}
+.section-title{font-size:22px;line-height:28px;margin:var(--space-8) 0 var(--space-3)}
+.pend{display:grid;gap:var(--space-2)}
+.pend button{display:flex;justify-content:space-between;gap:var(--space-3);text-align:left;background:var(--surface-200);border:1px solid var(--line);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);cursor:pointer;flex-wrap:wrap}
+
+details.settings{margin-top:var(--space-8);background:var(--surface-200);border:1px solid var(--line);border-radius:var(--radius-lg)}
+details.settings summary{cursor:pointer;padding:var(--space-4) var(--space-6);font-family:var(--font-display);font-size:22px;line-height:28px}
+.set-body{padding:0 var(--space-6) var(--space-6);display:grid;gap:var(--space-6)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:480px}
+th,td{padding:var(--space-2);text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-muted);font-weight:600}
+td input{width:100%;min-height:40px;background:var(--surface-100);border:1px solid var(--line-strong);border-radius:var(--radius-sm);padding:var(--space-2)}
+td input[type=checkbox]{width:20px;min-height:20px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--surface-100);padding:var(--space-3) var(--space-6);border-radius:var(--radius-pill);font-weight:600;z-index:20;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:no-preference){.toast{animation:up .2s ease-out}@keyframes up{from{transform:translate(-50%,8px);opacity:0}}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <path class="sc-blade" d="M30.2 35.5 L13.4 6.2 C13.1 5.6 13.8 5 14.3 5.4 L36.6 31.6 Z"/>
+          <path class="sc-blade" d="M33.8 35.5 L50.6 6.2 C50.9 5.6 50.2 5 49.7 5.4 L27.4 31.6 Z"/>
+          <path class="sc-ring" d="M30.5 34.5 L23.5 44"/><path class="sc-ring" d="M33.5 34.5 L40.5 44"/>
+          <circle class="sc-ring" cx="19" cy="50.5" r="7.5"/><circle class="sc-ring" cx="45" cy="50.5" r="7.5"/>
+          <circle class="sc-pin" cx="32" cy="32.2" r="2.6"/>
+        </svg>
+      </span>
+      <div>
+        <h1>Debs</h1>
+        <p class="muted" style="margin:4px 0 0">Cabeleireiro · corte, lavagem e spa, no salão ou em sua casa</p>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Secções">
+      <a href="#marcar" id="tab-marcar">Marcar</a>
+      <a href="#agenda" id="tab-agenda" hidden>Agenda</a>
+    </nav>
+  </header>
+
+  <div id="notice" class="notice" hidden></div>
+
+  <!-- ============ MARCAR ============ -->
+  <main id="view-marcar">
+    <div class="book" id="book-form">
+      <div class="form">
+        <section class="step" aria-labelledby="h-serv">
+          <div class="step-head"><span class="n">1</span><h2 id="h-serv">Serviços</h2></div>
+          <p class="muted small" style="margin:0">Pode escolher mais do que um.</p>
+          <div class="opts" id="services"></div>
+        </section>
+
+        <section class="step" aria-labelledby="h-local">
+          <div class="step-head"><span class="n">2</span><h2 id="h-local">Onde quer ser atendida</h2></div>
+          <div class="opts" role="radiogroup" aria-labelledby="h-local" id="locals"></div>
+          <div class="field full" id="addr-field" hidden>
+            <label for="f-addr">Endereço para o atendimento</label>
+            <textarea id="f-addr" placeholder="Bairro, rua, número da casa e um ponto de referência"></textarea>
+            <span class="err" id="e-addr" hidden></span>
+          </div>
+        </section>
+
+        <section class="step" aria-labelledby="h-when">
+          <div class="step-head"><span class="n">3</span><h2 id="h-when">Dia e hora</h2></div>
+          <div class="days" id="days" role="group" aria-label="Dia"></div>
+          <div class="label" id="slots-label">Horários livres</div>
+          <div class="slots" id="slots"></div>
+        </section>
+
+        <section class="step" aria-labelledby="h-you">
+          <div class="step-head"><span class="n">4</span><h2 id="h-you">Os seus dados</h2></div>
+          <div class="fields">
+            <div class="field">
+              <label for="f-name">Nome</label>
+              <input id="f-name" autocomplete="name" placeholder="Como se chama">
+              <span class="err" id="e-name" hidden></span>
+            </div>
+            <div class="field">
+              <label for="f-phone">Telefone</label>
+              <input id="f-phone" inputmode="tel" autocomplete="tel" placeholder="84 123 4567">
+              <span class="err" id="e-phone" hidden></span>
+            </div>
+            <div class="field full">
+              <label for="f-notes">Observações <span class="muted">(opcional)</span></label>
+              <textarea id="f-notes" placeholder="Por exemplo: cabelo comprido, tranças, alergias a produtos"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="step" aria-labelledby="h-pay">
+          <div class="step-head"><span class="n">5</span><h2 id="h-pay">Pagamento</h2></div>
+          <div class="opts" role="radiogroup" aria-labelledby="h-pay" id="pays"></div>
+          <div id="paybox"></div>
+        </section>
+      </div>
+
+      <aside class="summary" aria-labelledby="h-sum">
+        <h2 id="h-sum">A sua marcação</h2>
+        <div id="sum"></div>
+        <button class="btn primary wide" id="confirm">Confirmar marcação</button>
+        <p class="formerr" id="form-err" role="alert" hidden></p>
+        <p class="muted small" style="margin:0">O salão confirma a marcação pelo telefone.</p>
+      </aside>
+    </div>
+
+    <section class="done" id="done" hidden aria-live="polite"></section>
+  </main>
+
+  <!-- ============ AGENDA ============ -->
+  <main id="view-agenda" hidden>
+    <div class="ag-head">
+      <div>
+        <div class="label">Agenda do salão</div>
+        <h2 id="ag-title">Hoje</h2>
+      </div>
+      <div class="weeknav">
+        <button class="btn ghost sm" id="ag-prev" aria-label="Semana anterior">‹ Semana</button>
+        <button class="btn ghost sm" id="ag-today">Hoje</button>
+        <button class="btn ghost sm" id="ag-next" aria-label="Semana seguinte">Semana ›</button>
+        <a class="btn primary sm" href="#marcar">Nova marcação</a>
+      </div>
+    </div>
+    <div class="days" id="ag-days" role="group" aria-label="Dia da agenda"></div>
+    <div class="stats" id="ag-stats"></div>
+    <div class="list" id="ag-list"></div>
+
+    <h3 class="section-title">Por confirmar</h3>
+    <div class="pend" id="ag-pend"></div>
+
+    <details class="settings" id="settings">
+      <summary>Definições do salão</summary>
+      <div class="set-body">
+        <div>
+          <div class="label" style="margin-bottom:8px">Serviços e preços</div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Serviço</th><th>Duração (min)</th><th>Preço (MT)</th></tr></thead>
+            <tbody id="set-services"></tbody>
+          </table></div>
+        </div>
+        <div>
+          <div class="label" style="margin-bottom:8px">Horário de funcionamento</div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Dia</th><th>Aberto</th><th>Abre</th><th>Fecha</th></tr></thead>
+            <tbody id="set-hours"></tbody>
+          </table></div>
+        </div>
+        <div class="fields">
+          <div class="field"><label for="s-cap">Clientes ao mesmo tempo</label><input id="s-cap" type="number" min="1" max="10"></div>
+          <div class="field"><label for="s-step">Intervalo entre horários (min)</label><input id="s-step" type="number" min="10" max="120" step="5"></div>
+          <div class="field"><label for="s-fee">Taxa do domicílio (MT)</label><input id="s-fee" type="number" min="0" step="10"></div>
+          <div class="field"><label for="s-travel">Tempo de deslocação ao domicílio (min)</label><input id="s-travel" type="number" min="0" step="5"></div>
+          <div class="field"><label for="s-mpesa">Número M-Pesa</label><input id="s-mpesa" inputmode="tel" placeholder="84 ou 85…"></div>
+          <div class="field"><label for="s-mpesa-name">Nome na conta M-Pesa</label><input id="s-mpesa-name"></div>
+          <div class="field"><label for="s-emola">Número e-Mola</label><input id="s-emola" inputmode="tel" placeholder="86 ou 87…"></div>
+          <div class="field"><label for="s-emola-name">Nome na conta e-Mola</label><input id="s-emola-name"></div>
+          <div class="field"><label for="s-wa">WhatsApp do salão</label><input id="s-wa" inputmode="tel" placeholder="84 123 4567"></div>
+        </div>
+        <div class="actions"><button class="btn primary" id="s-save">Guardar definições</button></div>
+      </div>
+    </details>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+  /* ---------- defaults (used until the salon saves its own settings) ---------- */
+  const DEFAULT_CFG = {
+    services: [
+      { id: "corte",   name: "Corte de cabelo",   min: 45, price: 500,  desc: "Corte à sua medida e finalização." },
+      { id: "lavagem", name: "Lavagem de cabelo", min: 30, price: 300,  desc: "Lavagem, condicionador e secagem." },
+      { id: "spa",     name: "Spa capilar",       min: 60, price: 1200, desc: "Hidratação profunda e massagem do couro cabeludo." }
+    ],
+    hours: { "0": null, "1": ["08:00","18:00"], "2": ["08:00","18:00"], "3": ["08:00","18:00"], "4": ["08:00","18:00"], "5": ["08:00","18:00"], "6": ["08:00","16:00"] },
+    step: 30, capacity: 1, homeFee: 300, travelMin: 30,
+    mpesa: "", mpesaName: "", emola: "", emolaName: "", whatsapp: ""
+  };
+  const WD = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  const WDL = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+  const MO = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  const PAY = {
+    mpesa: { name: "M-Pesa", desc: "Pague agora pelo telemóvel." },
+    emola: { name: "e-Mola", desc: "Pague agora pelo telemóvel." },
+    local: { name: "No local", desc: "Pague no dia, em dinheiro ou como preferir." }
+  };
+  const STATUS = { pendente: "Por confirmar", confirmada: "Confirmada", concluida: "Concluída", cancelada: "Cancelada" };
+
+  /* ---------- helpers ---------- */
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  const hm = (m) => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+  const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const parseIso = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const mt = (n) => Number(n || 0).toLocaleString("pt-PT") + " MT";
+  const todayIso = () => iso(new Date());
+  const nowMin = () => { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); };
+  const longDate = (s) => { const d = parseIso(s); return WDL[d.getDay()] + ", " + d.getDate() + " " + MO[d.getMonth()]; };
+  const normPhone = (p) => String(p || "").replace(/[^\d]/g, "").replace(/^258(?=\d{9}$)/, "");
+  const validPhone = (p) => /^8[2-7]\d{7}$/.test(normPhone(p));
+  const fmtPhone = (p) => { const d = normPhone(p); return d.length === 9 ? d.slice(0,2) + " " + d.slice(2,5) + " " + d.slice(5) : p; };
+  const waLink = (p, text) => "https://wa.me/258" + normPhone(p) + (text ? "?text=" + encodeURIComponent(text) : "");
+  let toastT;
+  const toast = (msg) => { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 3200); };
+
+  /* ---------- store: shared db when available, memory otherwise ---------- */
+  const store = {
+    db: null, mem: (() => { try { return JSON.parse(localStorage.getItem("debs-bookings")) || []; } catch { return []; } })(),
+    memCfg: (() => { try { return JSON.parse(localStorage.getItem("debs-config")); } catch { return null; } })(),
+    listeners: new Set(),
+    emit() { try { localStorage.setItem("debs-bookings", JSON.stringify(this.mem)); } catch {} this.listeners.forEach((fn) => fn()); },
+    watchQuery(filterFn, dbQuery, cb) {
+      if (this.db) {
+        return dbQuery(this.db.collection("bookings")).onSnapshot(
+          (s) => cb(s.docs.map((d) => ({ id: d.id, ...d.data() }))),
+          () => cb([])
+        );
+      }
+      const run = () => cb(this.mem.filter(filterFn));
+      this.listeners.add(run); run();
+      return () => this.listeners.delete(run);
+    },
+    watchDay(date, cb) { return this.watchQuery((b) => b.date === date, (c) => c.where("date", "==", date), cb); },
+    watchPending(cb) { return this.watchQuery((b) => b.status === "pendente", (c) => c.where("status", "==", "pendente"), cb); },
+    async getDay(date) {
+      if (this.db) { const s = await this.db.collection("bookings").where("date", "==", date).get(); return s.docs.map((d) => ({ id: d.id, ...d.data() })); }
+      return this.mem.filter((b) => b.date === date);
+    },
+    async add(b) {
+      if (this.db) { const ref = await this.db.collection("bookings").add(b); return ref.id; }
+      const id = "m" + Date.now(); this.mem.push({ id, ...b }); this.emit(); return id;
+    },
+    async update(id, patch) {
+      if (this.db) return this.db.doc("bookings/" + id).update(patch);
+      const b = this.mem.find((x) => x.id === id); Object.assign(b, patch); this.emit();
+    },
+    watchConfig(cb) {
+      if (this.db) return this.db.doc("config/salon").onSnapshot((s) => cb(s.exists ? s.data() : null), () => cb(null));
+      cb(this.memCfg); return () => {};
+    },
+    async saveConfig(c) { if (this.db) return this.db.doc("config/salon").set(c); this.memCfg = c; try { localStorage.setItem("debs-config", JSON.stringify(c)); } catch {} }
+  };
+
+  /* ---------- state ---------- */
+  let cfg = structuredClone(DEFAULT_CFG);
+  const sel = { services: new Set(), local: "salao", date: null, time: null, pay: "local" };
+  let dayBookings = [];
+  let unsubDay = null;
+  let isAdmin = false;
+
+  const chosenServices = () => cfg.services.filter((s) => sel.services.has(s.id));
+  const serviceMin = () => chosenServices().reduce((a, s) => a + Number(s.min || 0), 0);
+  const blockMin = () => serviceMin() + (sel.local === "casa" ? Number(cfg.travelMin || 0) : 0);
+  const total = () => chosenServices().reduce((a, s) => a + Number(s.price || 0), 0) + (sel.local === "casa" ? Number(cfg.homeFee || 0) : 0);
+  const hoursFor = (dateStr) => cfg.hours[String(parseIso(dateStr).getDay())] || null;
+
+  /* ---------- availability ---------- */
+  function freeSlots(dateStr, bookings, need) {
+    const h = hoursFor(dateStr); if (!h || !need) return [];
+    const open = toMin(h[0]), close = toMin(h[1]), step = Math.max(5, Number(cfg.step) || 30), cap = Math.max(1, Number(cfg.capacity) || 1);
+    const live = bookings.filter((b) => b.status !== "cancelada");
+    const cutoff = dateStr === todayIso() ? nowMin() + 30 : -1;
+    const out = [];
+    for (let t = open; t + need <= close; t += step) {
+      if (t <= cutoff) continue;
+      const overlap = live.filter((b) => b.startMin < t + need && t < b.endMin).length;
+      if (overlap < cap) out.push(t);
+    }
+    return out;
+  }
+
+  /* ---------- render: booking form ---------- */
+  function renderServices() {
+    $("services").innerHTML = cfg.services.map((s) => `
+      <button type="button" class="opt" data-sv="${esc(s.id)}" aria-pressed="${sel.services.has(s.id)}">
+        <span class="row"><span class="tick" aria-hidden="true"></span>
+          <span style="display:grid;gap:4px;min-width:0;flex:1">
+            <span class="t"><span>${esc(s.name)}</span><span class="price">${mt(s.price)}</span></span>
+            <span class="small muted">${esc(s.desc || "")}</span>
+            <span class="small muted num">${Number(s.min)} min</span>
+          </span>
+        </span>
+      </button>`).join("");
+  }
+  function renderLocals() {
+    const opts = [
+      { id: "salao", name: "No salão", desc: "Venha ao Debs." },
+      { id: "casa", name: "Ao domicílio", desc: "Vamos a sua casa. Taxa de deslocação " + mt(cfg.homeFee) + "." }
+    ];
+    $("locals").innerHTML = opts.map((o) => `
+      <button type="button" class="opt" role="radio" data-loc="${o.id}" aria-checked="${sel.local === o.id}">
+        <span class="t"><span>${o.name}</span>${o.id === "casa" ? `<span class="price" style="color:var(--caramelo)">+ ${mt(cfg.homeFee)}</span>` : ""}</span>
+        <span class="small muted">${esc(o.desc)}</span>
+      </button>`).join("");
+    $("addr-field").hidden = sel.local !== "casa";
+  }
+  function renderDays() {
+    const start = new Date(); const out = [];
+    for (let i = 0; i < 21; i++) {
+      const d = addDays(start, i), s = iso(d), closed = !hoursFor(s);
+      const wd = i === 0 ? "Hoje" : i === 1 ? "Amanhã" : WD[d.getDay()];
+      out.push(`<button type="button" class="day" data-day="${s}" aria-pressed="${sel.date === s}" ${closed ? "disabled" : ""} aria-label="${longDate(s)}${closed ? ", fechado" : ""}">
+        <span class="wd">${wd}</span><span class="dn num">${d.getDate()}</span><span class="mo">${closed ? "fechado" : MO[d.getMonth()]}</span></button>`);
+    }
+    $("days").innerHTML = out.join("");
+  }
+  function renderSlots() {
+    const box = $("slots");
+    if (!sel.services.size) { box.innerHTML = `<div class="empty">Escolha primeiro o serviço para ver os horários.</div>`; return; }
+    if (!sel.date) { box.innerHTML = `<div class="empty">Escolha um dia.</div>`; return; }
+    const list = freeSlots(sel.date, dayBookings, blockMin());
+    if (sel.time != null && !list.includes(sel.time)) sel.time = null;
+    $("slots-label").textContent = "Horários livres · " + longDate(sel.date) + " · " + serviceMin() + " min";
+    box.innerHTML = list.length
+      ? list.map((t) => `<button type="button" class="slot" data-t="${t}" aria-pressed="${sel.time === t}">${hm(t)}</button>`).join("")
+      : `<div class="empty">Não há horários livres neste dia para ${serviceMin()} min. Experimente outro dia.</div>`;
+  }
+  function renderPays() {
+    $("pays").innerHTML = Object.entries(PAY).map(([id, p]) => `
+      <button type="button" class="opt" role="radio" data-pay="${id}" aria-checked="${sel.pay === id}">
+        <span class="t"><span>${p.name}</span></span><span class="small muted">${p.desc}</span>
+      </button>`).join("");
+    const box = $("paybox");
+    if (sel.pay === "local") {
+      box.innerHTML = `<div class="paybox"><span>Paga no dia do atendimento${sel.local === "casa" ? ", em sua casa" : ", no salão"}.</span></div>`;
+      return;
+    }
+    const num = sel.pay === "mpesa" ? cfg.mpesa : cfg.emola;
+    const nm = sel.pay === "mpesa" ? cfg.mpesaName : cfg.emolaName;
+    box.innerHTML = `<div class="paybox">
+      ${num ? `<div><div class="label">Envie ${mt(total())} para</div>
+        <div class="copyrow"><code id="paynum">${esc(fmtPhone(num))}</code><button type="button" class="btn ghost sm" id="copynum">Copiar número</button></div>
+        ${nm ? `<div class="small muted">Nome da conta: ${esc(nm)}</div>` : ""}</div>`
+        : `<div>O salão envia-lhe o número ${PAY[sel.pay].name} quando confirmar a marcação.</div>`}
+      <div class="field"><label for="f-ref">Código da transação <span class="muted">(opcional)</span></label>
+        <input id="f-ref" placeholder="Código do SMS de confirmação" value="${esc($("f-ref")?.value || "")}">
+        <span class="small muted">Se já pagou, cole aqui o código para o salão confirmar mais depressa.</span></div>
+    </div>`;
+  }
+  function renderSummary() {
+    const svs = chosenServices();
+    const lines = svs.map((s) => `<li><span>${esc(s.name)}</span><span>${mt(s.price)}</span></li>`);
+    if (sel.local === "casa") lines.push(`<li><span>Deslocação ao domicílio</span><span>${mt(cfg.homeFee)}</span></li>`);
+    $("sum").innerHTML = `
+      <div style="display:grid;gap:12px">
+        ${svs.length ? `<ul class="sum-list">${lines.join("")}</ul>` : `<p class="muted" style="margin:0">Ainda não escolheu nenhum serviço.</p>`}
+        <div class="small"><span class="label">Quando</span><br>${sel.date && sel.time != null ? `<b class="num">${longDate(sel.date)}, ${hm(sel.time)}–${hm(sel.time + serviceMin())}</b>` : `<span class="muted">Por escolher</span>`}</div>
+        <div class="small"><span class="label">Onde</span><br>${sel.local === "casa" ? "Ao domicílio" : "No salão"}</div>
+        <div class="small"><span class="label">Pagamento</span><br>${PAY[sel.pay].name}</div>
+        <div class="total"><span class="label">Total</span><strong>${mt(total())}</strong></div>
+      </div>`;
+  }
+  function renderAll() { renderServices(); renderLocals(); renderDays(); renderSlots(); renderPays(); renderSummary(); }
+
+  function watchSelectedDay() {
+    if (unsubDay) unsubDay();
+    unsubDay = null; dayBookings = [];
+    if (!sel.date) return renderSlots();
+    unsubDay = store.watchDay(sel.date, (list) => { dayBookings = list; renderSlots(); renderSummary(); });
+  }
+
+  /* ---------- form events ---------- */
+  $("services").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-sv]"); if (!b) return;
+    const id = b.dataset.sv; sel.services.has(id) ? sel.services.delete(id) : sel.services.add(id);
+    renderServices(); renderSlots(); renderPays(); renderSummary();
+  });
+  $("locals").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-loc]"); if (!b) return;
+    sel.local = b.dataset.loc; renderLocals(); renderSlots(); renderPays(); renderSummary();
+  });
+  $("days").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-day]"); if (!b || b.disabled) return;
+    sel.date = b.dataset.day; sel.time = null; renderDays(); watchSelectedDay(); renderSummary();
+  });
+  $("slots").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-t]"); if (!b) return;
+    sel.time = Number(b.dataset.t); renderSlots(); renderSummary();
+  });
+  $("pays").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-pay]"); if (!b) return;
+    sel.pay = b.dataset.pay; renderPays(); renderSummary();
+  });
+  $("paybox").addEventListener("click", async (e) => {
+    if (e.target.id !== "copynum") return;
+    const txt = $("paynum").textContent.replace(/\s/g, "");
+    try { await navigator.clipboard.writeText(txt); toast("Número copiado"); }
+    catch { const r = document.createRange(); r.selectNodeContents($("paynum")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Número selecionado. Copie-o."); }
+  });
+
+  function fieldErr(id, msg) { const e = $(id); e.textContent = msg || ""; e.hidden = !msg; }
+
+  $("confirm").addEventListener("click", async () => {
+    const name = $("f-name").value.trim(), phone = $("f-phone").value.trim(), addr = $("f-addr").value.trim();
+    fieldErr("e-name", name ? "" : "Indique o seu nome.");
+    fieldErr("e-phone", validPhone(phone) ? "" : "Indique um número de telemóvel moçambicano, por exemplo 84 123 4567.");
+    fieldErr("e-addr", sel.local === "casa" && !addr ? "Indique o endereço para o atendimento ao domicílio." : "");
+    const problems = [];
+    if (!sel.services.size) problems.push("escolha pelo menos um serviço");
+    if (!sel.date || sel.time == null) problems.push("escolha o dia e a hora");
+    if (!name || !validPhone(phone)) problems.push("preencha o nome e o telefone");
+    if (sel.local === "casa" && !addr) problems.push("indique o endereço");
+    const fe = $("form-err");
+    if (problems.length) { fe.textContent = "Para confirmar, " + problems.join(", ") + "."; fe.hidden = false; return; }
+    fe.hidden = true;
+
+    const btn = $("confirm"); btn.disabled = true; btn.textContent = "A guardar…";
+    try {
+      const need = blockMin();
+      const fresh = await store.getDay(sel.date);
+      if (!freeSlots(sel.date, fresh, need).includes(sel.time)) {
+        dayBookings = fresh; sel.time = null; renderSlots(); renderSummary();
+        fe.textContent = "Este horário acabou de ser ocupado. Escolha outro."; fe.hidden = false; return;
+      }
+      const svs = chosenServices().map((s) => ({ id: s.id, name: s.name, min: Number(s.min), price: Number(s.price) }));
+      const booking = {
+        name, phone: normPhone(phone), address: sel.local === "casa" ? addr : "", notes: $("f-notes").value.trim(),
+        services: svs, local: sel.local, date: sel.date, start: hm(sel.time), startMin: sel.time,
+        serviceEnd: hm(sel.time + serviceMin()), endMin: sel.time + need,
+        homeFee: sel.local === "casa" ? Number(cfg.homeFee || 0) : 0, total: total(),
+        pay: sel.pay, ref: ($("f-ref")?.value || "").trim(), payStatus: "pendente",
+        status: "pendente", createdAt: new Date().toISOString()
+      };
+      await store.add(booking);
+      showDone(booking);
+    } catch (err) {
+      fe.textContent = err && err.code === "quota_exceeded"
+        ? "A agenda está cheia de registos antigos. Peça ao salão para limpar marcações antigas."
+        : "Não foi possível guardar a marcação. Verifique a ligação e tente outra vez.";
+      fe.hidden = false;
+    } finally { btn.disabled = false; btn.textContent = "Confirmar marcação"; }
+  });
+
+  function bookingText(b) {
+    return `Olá Debs! Fiz uma marcação:\n${b.services.map((s) => s.name).join(", ")}\n${longDate(b.date)}, ${b.start}\n${b.local === "casa" ? "Ao domicílio: " + b.address : "No salão"}\nPagamento: ${PAY[b.pay].name}${b.ref ? " (código " + b.ref + ")" : ""}\nTotal: ${mt(b.total)}\nNome: ${b.name}`;
+  }
+  function showDone(b) {
+    $("book-form").hidden = true;
+    const d = $("done"); d.hidden = false;
+    d.innerHTML = `
+      <div class="label">Marcação feita</div>
+      <h2>${esc(b.name.split(" ")[0])}, até ${b.date === todayIso() ? "logo" : "breve"}!</h2>
+      <p style="margin:0" class="num"><b>${longDate(b.date)}, ${b.start}–${b.serviceEnd}</b><br>
+      ${esc(b.services.map((s) => s.name).join(", "))}<br>
+      ${b.local === "casa" ? "Ao domicílio: " + esc(b.address) : "No salão"}<br>
+      Pagamento: ${PAY[b.pay].name} · <b style="color:var(--caramelo)">${mt(b.total)}</b></p>
+      <p class="muted" style="margin:0">A marcação fica por confirmar até o salão lhe ligar ou escrever.</p>
+      <div class="actions">
+        ${cfg.whatsapp ? `<a class="btn primary" href="${waLink(cfg.whatsapp, bookingText(b))}" target="_blank" rel="noopener">Avisar o salão no WhatsApp</a>` : ""}
+        <button class="btn ghost" id="again">Fazer outra marcação</button>
+      </div>`;
+    $("again").onclick = resetForm;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function resetForm() {
+    sel.services.clear(); sel.local = "salao"; sel.time = null; sel.pay = "local";
+    ["f-name","f-phone","f-notes","f-addr"].forEach((i) => ($(i).value = ""));
+    $("done").hidden = true; $("book-form").hidden = false; renderAll();
+  }
+
+  /* ---------- agenda ---------- */
+  let agDate = todayIso(), agStart = todayIso(), agBookings = [], unsubAg = null, unsubPend = null, pending = [];
+  const confirmCancel = new Set();
+
+  function renderAgDays() {
+    const s = parseIso(agStart), out = [];
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(s, i), k = iso(d), closed = !hoursFor(k);
+      out.push(`<button type="button" class="day" data-ag="${k}" aria-pressed="${agDate === k}" aria-label="${longDate(k)}">
+        <span class="wd">${k === todayIso() ? "Hoje" : WD[d.getDay()]}</span><span class="dn num">${d.getDate()}</span><span class="mo">${closed ? "fechado" : MO[d.getMonth()]}</span></button>`);
+    }
+    $("ag-days").innerHTML = out.join("");
+    $("ag-title").textContent = agDate === todayIso() ? "Hoje, " + parseIso(agDate).getDate() + " " + MO[parseIso(agDate).getMonth()] : longDate(agDate);
+  }
+  function renderAgenda() {
+    const list = [...agBookings].sort((a, b) => a.startMin - b.startMin);
+    const live = list.filter((b) => b.status !== "cancelada");
+    const h = hoursFor(agDate);
+    $("ag-stats").innerHTML = `
+      <div class="stat"><span class="label">Marcações</span><b>${live.length}</b></div>
+      <div class="stat"><span class="label">Por confirmar</span><b style="color:var(--warning)">${live.filter((b) => b.status === "pendente").length}</b></div>
+      <div class="stat"><span class="label">Pagamento pendente</span><b>${live.filter((b) => b.payStatus !== "pago").length}</b></div>
+      <div class="stat"><span class="label">Total previsto</span><b style="color:var(--caramelo)">${mt(live.reduce((a, b) => a + Number(b.total || 0), 0))}</b></div>`;
+    if (!list.length) {
+      $("ag-list").innerHTML = `<div class="empty">${h ? `Sem marcações neste dia. Aberto das ${h[0]} às ${h[1]}.` : "O salão está fechado neste dia."} Para registar uma marcação feita por telefone, use <a href="#marcar">Nova marcação</a>.</div>`;
+      return;
+    }
+    $("ag-list").innerHTML = list.map((b) => {
+      const st = b.status || "pendente", paid = b.payStatus === "pago";
+      const acts = [];
+      if (st === "pendente") acts.push(`<button class="btn primary sm" data-act="confirmada" data-id="${b.id}">Confirmar</button>`);
+      if (st === "confirmada") acts.push(`<button class="btn primary sm" data-act="concluida" data-id="${b.id}">Marcar como concluída</button>`);
+      if (st !== "cancelada" && !paid) acts.push(`<button class="btn ghost sm" data-act="pago" data-id="${b.id}">Registar pagamento</button>`);
+      if (st !== "cancelada" && st !== "concluida") acts.push(confirmCancel.has(b.id)
+        ? `<button class="btn danger sm" data-act="cancelada" data-id="${b.id}">Sim, cancelar</button><button class="btn ghost sm" data-act="keep" data-id="${b.id}">Não</button>`
+        : `<button class="btn ghost sm" data-act="ask-cancel" data-id="${b.id}">Cancelar</button>`);
+      if (st === "cancelada") acts.push(`<button class="btn ghost sm" data-act="pendente" data-id="${b.id}">Repor marcação</button>`);
+      return `<article class="bk ${st === "cancelada" ? "cancel" : ""}">
+        <div class="time"><b>${esc(b.start)}</b><span class="small muted">até ${esc(b.serviceEnd)}</span></div>
+        <div class="main">
+          <div class="who"><strong>${esc(b.name)}</strong><span class="chip ${st}">${STATUS[st] || st}</span></div>
+          <div class="meta">
+            <span class="tag"><b>${esc((b.services || []).map((s) => s.name).join(", "))}</b></span>
+            <span class="tag num">Tel. <span style="user-select:all">${esc(fmtPhone(b.phone))}</span> · <a href="${waLink(b.phone)}" target="_blank" rel="noopener">WhatsApp</a></span>
+          </div>
+          <div class="meta">
+            ${b.local === "casa" ? `<span class="chip home">Domicílio</span><span class="tag">${esc(b.address)}</span>` : `<span class="tag">No salão</span>`}
+          </div>
+          <div class="meta">
+            <span class="tag">${PAY[b.pay]?.name || esc(b.pay)} · <b class="num">${mt(b.total)}</b></span>
+            <span class="chip ${paid ? "pago" : "pendente"}">${paid ? "Pago" : "Por pagar"}</span>
+            ${b.ref ? `<span class="tag">Código: <b style="user-select:all">${esc(b.ref)}</b></span>` : ""}
+          </div>
+          ${b.notes ? `<div class="small muted">“${esc(b.notes)}”</div>` : ""}
+          <div class="acts">${acts.join("")}</div>
+        </div>
+      </article>`;
+    }).join("");
+  }
+  function renderPending() {
+    const t = todayIso();
+    const list = pending.filter((b) => b.date >= t).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+    $("ag-pend").innerHTML = list.length
+      ? list.map((b) => `<button type="button" data-go="${b.date}"><span><b>${esc(b.name)}</b> · ${esc((b.services || []).map((s) => s.name).join(", "))}${b.local === "casa" ? " · domicílio" : ""}</span><span class="num muted">${longDate(b.date)}, ${esc(b.start)}</span></button>`).join("")
+      : `<div class="empty">Não há marcações por confirmar.</div>`;
+  }
+  function watchAgenda() {
+    if (unsubAg) unsubAg();
+    unsubAg = store.watchDay(agDate, (l) => { agBookings = l; renderAgenda(); });
+  }
+  $("ag-days").addEventListener("click", (e) => { const b = e.target.closest("[data-ag]"); if (!b) return; agDate = b.dataset.ag; renderAgDays(); watchAgenda(); });
+  $("ag-prev").onclick = () => { agStart = iso(addDays(parseIso(agStart), -7)); agDate = agStart; renderAgDays(); watchAgenda(); };
+  $("ag-next").onclick = () => { agStart = iso(addDays(parseIso(agStart), 7)); agDate = agStart; renderAgDays(); watchAgenda(); };
+  $("ag-today").onclick = () => { agStart = agDate = todayIso(); renderAgDays(); watchAgenda(); };
+  $("ag-pend").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-go]"); if (!b) return;
+    agDate = b.dataset.go; agStart = agDate; renderAgDays(); watchAgenda(); window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  $("ag-list").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const id = b.dataset.id, act = b.dataset.act;
+    if (act === "ask-cancel") { confirmCancel.add(id); return renderAgenda(); }
+    if (act === "keep") { confirmCancel.delete(id); return renderAgenda(); }
+    confirmCancel.delete(id);
+    try {
+      if (act === "pago") { await store.update(id, { payStatus: "pago", paidAt: new Date().toISOString() }); toast("Pagamento registado"); }
+      else { await store.update(id, { status: act, [act + "At"]: new Date().toISOString() }); toast({ confirmada: "Marcação confirmada", concluida: "Marcada como concluída", cancelada: "Marcação cancelada", pendente: "Marcação reposta" }[act]); }
+    } catch { toast("Não foi possível guardar. Tente outra vez."); }
+  });
+
+  /* ---------- settings ---------- */
+  function renderSettings() {
+    $("set-services").innerHTML = cfg.services.map((s, i) => `<tr>
+      <td><input id="sv-name-${i}" value="${esc(s.name)}" aria-label="Nome do serviço"></td>
+      <td><input id="sv-min-${i}" type="number" min="5" step="5" value="${Number(s.min)}" aria-label="Duração de ${esc(s.name)}"></td>
+      <td><input id="sv-price-${i}" type="number" min="0" step="10" value="${Number(s.price)}" aria-label="Preço de ${esc(s.name)}"></td></tr>`).join("");
+    $("set-hours").innerHTML = [1,2,3,4,5,6,0].map((d) => { const h = cfg.hours[String(d)]; return `<tr>
+      <td>${WDL[d]}</td>
+      <td><input type="checkbox" id="hr-open-${d}" ${h ? "checked" : ""} aria-label="${WDL[d]} aberto"></td>
+      <td><input type="time" id="hr-a-${d}" value="${h ? h[0] : "08:00"}" aria-label="${WDL[d]} abre"></td>
+      <td><input type="time" id="hr-b-${d}" value="${h ? h[1] : "18:00"}" aria-label="${WDL[d]} fecha"></td></tr>`; }).join("");
+    $("s-cap").value = cfg.capacity; $("s-step").value = cfg.step; $("s-fee").value = cfg.homeFee; $("s-travel").value = cfg.travelMin;
+    $("s-mpesa").value = cfg.mpesa || ""; $("s-mpesa-name").value = cfg.mpesaName || "";
+    $("s-emola").value = cfg.emola || ""; $("s-emola-name").value = cfg.emolaName || ""; $("s-wa").value = cfg.whatsapp || "";
+  }
+  $("s-save").onclick = async () => {
+    const next = structuredClone(cfg);
+    next.services = cfg.services.map((s, i) => ({ ...s, name: $("sv-name-" + i).value.trim() || s.name, min: Math.max(5, Number($("sv-min-" + i).value) || s.min), price: Math.max(0, Number($("sv-price-" + i).value) || 0) }));
+    for (const d of [0,1,2,3,4,5,6]) {
+      const a = $("hr-a-" + d).value, b = $("hr-b-" + d).value;
+      next.hours[String(d)] = $("hr-open-" + d).checked && a && b && toMin(b) > toMin(a) ? [a, b] : null;
+    }
+    next.capacity = Math.max(1, Number($("s-cap").value) || 1);
+    next.step = Math.max(5, Number($("s-step").value) || 30);
+    next.homeFee = Math.max(0, Number($("s-fee").value) || 0);
+    next.travelMin = Math.max(0, Number($("s-travel").value) || 0);
+    next.mpesa = normPhone($("s-mpesa").value); next.mpesaName = $("s-mpesa-name").value.trim();
+    next.emola = normPhone($("s-emola").value); next.emolaName = $("s-emola-name").value.trim();
+    next.whatsapp = normPhone($("s-wa").value);
+    try { await store.saveConfig(next); cfg = next; applyCfg(); toast("Definições guardadas"); }
+    catch { toast("Não foi possível guardar as definições."); }
+  };
+
+  function applyCfg() {
+    renderAll(); renderAgDays(); renderAgenda(); renderPending();
+    if (!$("settings").open) renderSettings();
+  }
+
+  /* ---------- routing ---------- */
+  function route() {
+    const want = location.hash === "#agenda" && isAdmin ? "agenda" : "marcar";
+    $("view-marcar").hidden = want !== "marcar";
+    $("view-agenda").hidden = want !== "agenda";
+    $("tab-marcar").setAttribute("aria-current", want === "marcar" ? "page" : "false");
+    $("tab-agenda").setAttribute("aria-current", want === "agenda" ? "page" : "false");
+    if (want === "marcar" && !$("done").hidden && location.hash === "#marcar") resetForm();
+  }
+  window.addEventListener("hashchange", route);
+
+  /* ---------- boot ---------- */
+  renderAll(); renderSettings(); route();
+
+  (async () => {
+    let db = null, user = null;
+    try { db = await (window.claude?.use?.("db") ?? null); } catch {}
+    try { user = await (window.claude?.use?.("user") ?? null); } catch {}
+    if (db) store.db = db;
+    else {
+      const n = $("notice"); n.hidden = false;
+      n.textContent = "As marcações ficam guardadas só neste navegador, neste aparelho.";
+    }
+    isAdmin = db ? Boolean(await (user?.canEdit?.() ?? false)) : true;
+    $("tab-agenda").hidden = !isAdmin;
+    store.watchConfig((c) => { cfg = c ? { ...structuredClone(DEFAULT_CFG), ...c } : structuredClone(DEFAULT_CFG); applyCfg(); });
+    watchSelectedDay();
+    if (isAdmin) { watchAgenda(); unsubPend = store.watchPending((l) => { pending = l; renderPending(); }); }
+    renderAgDays(); route();
+  })();
+})();
+</script>
+
+</body>
+</html>
